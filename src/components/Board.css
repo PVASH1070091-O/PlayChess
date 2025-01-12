@@ -1,0 +1,43 @@
+.chessBoard{
+  display :flex;
+  border: 10px solid black;
+  background-color: white;
+  padding:10px
+}
+.wrapper{
+    display: grid;
+    grid-template-columns: repeat(8,1fr);
+    background-color: dodgerblue;
+    padding: 10px;
+}
+.wrapper > div {
+    border: 1px solid black;
+    padding: 20px;
+    text-align: center;
+  }
+  .white-chess-cell{
+    background-color: #cddc95; /* Light cells */
+    height: 70px;
+  }
+  .clicked{
+    background-color: #dede38 !important;
+  }
+  
+  .green-chess-cell{
+    background-color: #72af6c;
+    height: 70px;  /* Dark cells */
+  }
+  .chessPiece{
+    font-size: 40px;
+    
+  }
+  
+  .modal-content{
+    margin:auto;
+  }
+
+  .lastSeconds{
+    font-weight: 600 !important;
+    font-size: 40px !important;
+    color:red;
+  }
