@@ -1,17 +1,19 @@
-import React, { useState } from 'react'
-import useGameLogic from './useGameLogic'
+import { useContext } from 'react';
 import useSafeLogic from './useSafeLogic'
+import { KingContext } from '../AppContext/KingContext';
 
 const useCheckLogic = () => {
     const {isPawnSafe,isBishopSafe,isKnightSafe,isRookSafe,isKingSafe} = useSafeLogic();
-  const checkMate = (props:any):boolean =>{
+    const {value} = useContext(KingContext);
 
-    console.log("gameState",props)
+
+    const checkMate = (props:any):boolean =>{
     const kingPosition = props.gameState.kingPosition
     const gameState = props.gameState;
     const dRow=[-1,-1,-1,0,1,1,1,0]
     const dCol=[-1,0,1,1,1,0,-1,-1]
     
+   // 
 
     function boundaryCheck(row:number,col:number){
         return row >=0 && row<8 && col >=0 && col <8;
@@ -22,7 +24,10 @@ const useCheckLogic = () => {
             crrRow:kingPosition.row + dRow[i],
             crrCol:kingPosition.col + dCol[i],
             board:gameState.board,
-            piece:{type:'king' as 'king',color:kingPosition.color,isDead:false,canMove:true,numberOfTurns:1}
+            piece:{type:'king' as 'king',color:kingPosition.color,isDead:false,canMove:true,numberOfTurns:1},
+            forCheckMate:false,
+            prevRow:kingPosition.row,
+            prevCol:kingPosition.col
         }
         let safeFromPawn=false;
         let safeFromKnight=false;
@@ -31,38 +36,38 @@ const useCheckLogic = () => {
         let safeFromKing=false;
         if(boundaryCheck(params.crrRow,params.crrCol) && params.board[params.crrRow][params.crrCol].type==null){
             if(isPawnSafe(params)){
-                console.log("is pawn safe")
+                
                 safeFromPawn=true;
                
             }
             if(isKnightSafe(params)){
-                console.log("is knight safe")
+                
                 safeFromKnight=true;
                
             }
             if(isRookSafe(params)){
-                console.log("is rook safe")
+                
                 safeFromRook=true;
                
             }
-            console.log("safffff",safeFromRook)
+            
             if(isBishopSafe(params)){
-                console.log("is bishop safe")
+                
                 safeFromBishop=true;
                 
             }
             if(isKingSafe(params)){
-                console.log("is king safe")
+                
                 safeFromKing=true;
                 
             }
         }
         if(safeFromPawn && safeFromBishop && safeFromKnight && safeFromRook && safeFromKing){
-            console.log("safe place",params.crrRow,params.crrCol)
+            
             return false;
         }
         else{
-            console.log("king cannot move")
+            
         }
     }
 
@@ -72,39 +77,39 @@ const useCheckLogic = () => {
         crrRow:gameState.crrRow,
         crrCol:gameState.crrCol,
         board:gameState.board,
-        piece:gameState.piece
+        piece:gameState.piece,
+        forCheckMate:false
     }
-    console.log("params",params)
     if(!isPawnSafe(params)){
-        console.log("pawn marr dega")
+        
         return false;
 
         
     }
     if(!isKnightSafe(params)){
-        console.log("ghoda maar dega")
+        
         return false;
         
     }
     if(!isRookSafe(params)){
-        console.log("hathi maar dega")
+        
         return false;
         
     }
     if(!isBishopSafe(params)){
-        console.log("bishop maar dega")
+        
         return false;
         
     }
     if(!isKingSafe(params)){
-        console.log("king maar dega")
+        
         return false;
         
     }
-
+    
     //check if something can come in the line of the check
 
-    if(props.gameState.piece.type=='bishop'){
+    if(props.gameState.piece.type=='bishop' || props.gameState.piece.type=='queen'){
         let rBishop = [1,-1,-1,1];
         let cBishop = [1,1,-1,-1];
         let i=0;
@@ -128,27 +133,162 @@ const useCheckLogic = () => {
                 crrRow:rowMove,
                 crrCol:colMove,
                 board:gameState.board,
-                piece:props.gameState.piece
+                piece:props.gameState.piece,
+                forCheckMate:true
             }
-            console.log("inpe check hoga",rowMove,colMove);
-            if(props.gameState.board[rowMove+props.gameState.direction][colMove].type=='pawn' 
-                && props.gameState.board[rowMove+props.gameState.direction][colMove].color !=props.gameState.piece.color){
-                    console.log("pawn aayega beech me")
+            
+            if((props.gameState.board[rowMove-props.gameState.direction][colMove].type=='pawn' || props.gameState.board[rowMove-2*props.gameState.direction][colMove].type=='pawn') 
+                && (props.gameState.board[rowMove-props.gameState.direction][colMove].color !=props.gameState.piece.color || props.gameState.board[rowMove-2*props.gameState.direction][colMove].color !=props.gameState.piece.color)){
+                    
                     return false;
             }
             if(!isBishopSafe(params)){
-                console.log("bishop aayega beech me")
+                
                 return false;
             }
             if(!isKnightSafe(params)){
-                console.log("knight aajayega")
+                
                 return false;
             }
             if(!isRookSafe(params)){
-                console.log("rook aajygea")
+                
                 return false;
             }
 
+        }
+    }
+    else if(gameState.piece.type=='rook' || gameState.piece.type=='queen'){
+        
+        let kingsRow = gameState.kingPosition.row;
+        let rookRow = gameState.crrRow
+        let kingsCol =gameState.kingPosition.col;
+        let rookCol = gameState.crrCol
+        const rowDiff = Math.abs(rookRow - kingsRow);
+        const colDiff = Math.abs(rookCol - kingsCol);
+        
+        if(rowDiff==0){
+            if(kingsCol < rookCol){
+                for(let i=kingsCol+1;i<rookCol;i++){
+                   
+                    const colMove = i;
+                    let params={
+                        crrRow:rookRow,
+                        crrCol:colMove,
+                        board:gameState.board,
+                        piece:gameState.piece,
+                        forCheckMate:true
+                    }
+                    
+                    if((boundaryCheck(rookRow - 1*gameState.direction,colMove)) && (gameState.board[rookRow - 1*gameState.direction][colMove].type=='pawn' || gameState.board[rookRow-2*gameState.direction][colMove].type=='pawn')){
+                        if(gameState.board[rookRow - 1*gameState.direction][colMove].color!=gameState.piece.color || gameState.board[rookRow - 2*gameState.direction][colMove].color!=gameState.piece.color){
+                            
+                            return false;
+                        }
+                    }
+                    if(!isBishopSafe(params)){
+                        
+                        return false;
+                    }
+                    if(!isKnightSafe(params)){
+                        
+                        return false;
+                    }
+                    if(!isRookSafe(params)){
+                        
+                        return false;
+                    }
+                }
+            }
+            if(kingsCol > rookCol){
+                for(let i=rookCol+1;i<kingsCol;i++){
+                   
+                    const colMove = i;
+                    let params={
+                        crrRow:rookRow,
+                        crrCol:colMove,
+                        board:gameState.board,
+                        piece:gameState.piece,
+                        forCheckMate:true
+                    }
+                    
+                    if(boundaryCheck(rookRow - 1*gameState.direction,colMove) && (gameState.board[rookRow - 1*gameState.direction][colMove].type=='pawn' || gameState.board[rookRow-2*gameState.direction][colMove].type=='pawn')){
+                        if(gameState.board[rookRow - 1*gameState.direction][colMove].color!=gameState.piece.color || gameState.board[rookRow - 2*gameState.direction][colMove].color!=gameState.piece.color){
+                            
+                            return false;
+                        }
+                    }
+                    if(!isBishopSafe(params)){
+                        
+                        return false;
+                    }
+                    if(!isKnightSafe(params)){
+                        
+                        return false;
+                    }
+                    if(!isRookSafe(params)){
+                        
+                        return false;
+                    }
+                }
+            }
+        }
+        else{
+            if(colDiff==0){
+                if(kingsRow < rookRow){
+                    for(let i=kingsRow+1;i<rookRow;i++){
+                       
+                       
+                        let params={
+                            crrRow:i,
+                            crrCol:rookCol,
+                            board:gameState.board,
+                            piece:gameState.piece,
+                            forCheckMate:true
+                        }
+                        
+                       
+                        if(!isBishopSafe(params)){
+                            
+                            return false;
+                        }
+                        if(!isKnightSafe(params)){
+                            
+                            return false;
+                        }
+                        if(!isRookSafe(params)){
+                            
+                            return false;
+                        }
+                    }
+                }
+                if(kingsRow > rookRow){
+                    for(let i=rookRow+1;i<kingsRow;i++){
+                       
+                        
+                        let params={
+                            crrRow:i,
+                            crrCol:rookCol,
+                            board:gameState.board,
+                            piece:gameState.piece,
+                            forCheckMate:true
+                        }
+                        
+                        
+                        if(!isBishopSafe(params)){
+                            
+                            return false;
+                        }
+                        if(!isKnightSafe(params)){
+                            
+                            return false;
+                        }
+                        if(!isRookSafe(params)){
+                            
+                            return false;
+                        }
+                    }
+                }
+            }
         }
     }
     

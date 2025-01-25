@@ -35,6 +35,16 @@ interface GameStateType{
     gameState:GameState;
     setGameState:React.Dispatch<React.SetStateAction<GameState>>
 }
+interface TimerType{
+    timer:number;
+    setTimer:React.Dispatch<React.SetStateAction<number>>
+}
+interface SocketType{
+    socket: WebSocket | null,
+    socketConnection: (loggedInUser:any) => WebSocket,
+    setSocket:React.Dispatch<React.SetStateAction<WebSocket | null>>
+}
+
 
 export const KingContext = createContext<ContextType>({
     value: { 
@@ -60,3 +70,10 @@ export const GameStateContext = createContext<GameStateType>({
         },
     setGameState: () =>{}
 })
+
+export const TimerCheck = createContext<TimerType>({
+    timer:0,
+    setTimer: () => {}
+});
+
+export const SocketContext = createContext<SocketType | undefined>(undefined)

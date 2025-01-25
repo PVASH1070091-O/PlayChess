@@ -8,8 +8,10 @@ export interface IsPawnSafeParams {
     crrCol: number;
     board: PieceType[][];
     piece: PieceType;
+    forCheckMate:boolean;
     prevRow?: number;
     prevCol?: number;
+
 }
 
 const useSafeLogic = () => {
@@ -23,8 +25,7 @@ const useSafeLogic = () => {
         return row >=0 && row<8 && col >=0 && col <8;
     }
 
-    function isPawnSafe({crrRow,crrCol,board,piece}:IsPawnSafeParams){
-        console.log("board",board)
+    function isPawnSafe({crrRow,crrCol,board,piece,forCheckMate}:IsPawnSafeParams){
         let dRow;
         let dCol;
         if(piece.color=='black'){
@@ -37,38 +38,62 @@ const useSafeLogic = () => {
             
         }
         for(let i=0;i<2;i++){
-            console.log("crrrrrPawn",board,board)
 
             if(boundaryCheck(crrRow+dRow[i],crrCol+dCol[i]) && (board[crrRow+dRow[i]][crrCol+dCol[i]].type=='pawn' || board[crrRow+dRow[i]][crrCol+dCol[i]].type=='queen') && 
             board[crrRow+dRow[i]][crrCol+dCol[i]].color!=piece.color){
-                //console.log("pawn ki wajah se")
+                if(!forCheckMate){
+                    let checkPiece={
+                        type:board[crrRow+dRow[i]][crrCol+dCol[i]].type,
+                        color:board[crrRow+dRow[i]][crrCol+dCol[i]].color,
+                        isDead:false,
+                        canMove:true,
+                        numberOfTurns:board[crrRow+dRow[i]][crrCol+dCol[i]].numberOfTurns+1
+                    }
+                    let direction = board[crrRow+dRow[i]][crrCol+dCol[i]].color=='white' ? 1: -1;
+                    let kingPosition={row:value[piece.color ?? "white"].row,col:value[piece.color ?? "white"].col,color:piece.color}
+
+                    let nState={crrRow:crrRow+dRow[i],crrCol:crrCol+dCol[i],piece:checkPiece,direction,board,kingPosition}
+                    setGameState(nState);
+                }
                 return false;
             }
         }
         
         return true;
     }
-    function isKnightSafe({crrRow,crrCol,board,piece}:IsPawnSafeParams){
+    function isKnightSafe({crrRow,crrCol,board,piece,forCheckMate}:IsPawnSafeParams){
         let rKnight = [2,2,-2,-2,-1,1,-1,1];
         let cKnight = [1,-1,1,-1,-2,-2,2,2];
-        //console.log("knight safe called")
         for(let i=0;i<8;i++){
-            console.log("knight chla",crrRow,rKnight[i],crrCol,cKnight[i])
             if(boundaryCheck(crrRow+rKnight[i],crrCol+cKnight[i]) && board[crrRow+rKnight[i]][crrCol+cKnight[i]].color!=piece.color && 
             board[crrRow+rKnight[i]][crrCol+cKnight[i]].type=='knight' ){
-                //console.log("knight ki wajah se")
+                if(!forCheckMate){
+                let checkPiece={
+                    type:board[crrRow+rKnight[i]][crrCol+cKnight[i]].type,
+                    color:board[crrRow+rKnight[i]][crrCol+cKnight[i]].color,
+                    isDead:false,
+                    canMove:true,
+                    numberOfTurns:board[crrRow+rKnight[i]][crrCol+cKnight[i]].numberOfTurns+1
+                }
+                let direction = board[crrRow+rKnight[i]][crrCol+cKnight[i]].color=='white' ? 1: -1;
+                let kingPosition={row:value[piece.color ?? "white"].row,col:value[piece.color ?? "white"].col,color:piece.color}
+
+                let nState={crrRow:crrRow+rKnight[i],crrCol:crrCol+cKnight[i],piece:checkPiece,direction,board,kingPosition}
+                setGameState(nState);
+            }
+                
                 return false;
             }
         }
         return true;
     }
-    function isRookSafe({crrRow,crrCol,board,piece}:IsPawnSafeParams){
+    function isRookSafe({crrRow,crrCol,board,piece,prevRow,prevCol,forCheckMate}:IsPawnSafeParams){
+        
         let iteratorRook = [true,true,true,true]
-        console.log("roook safe called",crrRow,crrCol,piece,board)
         for(let i=1;i<8;i++){
             if(boundaryCheck(crrRow,crrCol+i) && iteratorRook[0]){
                 if((board[crrRow][crrCol+i].type=='rook' || board[crrRow][crrCol+i].type=='queen') && board[crrRow][crrCol+i].color!=piece.color){
-                    console.log("rook or queen  ki wajah se1")
+                    if(!forCheckMate){
                     let checkPiece={
                         type:board[crrRow][crrCol+i].type,
                         color:board[crrRow][crrCol+i].color,
@@ -77,23 +102,25 @@ const useSafeLogic = () => {
                         numberOfTurns:board[crrRow][crrCol+i].numberOfTurns+1
                     }
                     let direction = board[crrRow][crrCol+i].color=='white' ? 1: -1;
-                    //console.log("dadad",value[piece.color ?? "white"].row,direction,piece.color)
                     let kingPosition={row:value[piece.color ?? "white"].row,col:value[piece.color ?? "white"].col,color:piece.color}
     
                     let nState={crrRow,crrCol:crrCol+i,piece:checkPiece,direction,board,kingPosition}
                     setGameState(nState);
+                    }
                     return false;
                 }
-                if(board[crrRow][crrCol+i].type!=null && board[crrRow][crrCol+i].type!='king'){
-                    iteratorRook[0]=false;
+                if(board[crrRow][crrCol+i].type!=null){
+                    if(!(prevRow && prevCol && (crrRow == prevRow && crrCol+i == prevCol))){
+                        iteratorRook[0]=false;
+                    }
+                   
                 }
                 
             }
             if(boundaryCheck(crrRow,crrCol-i) && iteratorRook[1]){
-                console.log("check rook",board,crrRow,crrCol-i,board[crrRow][crrCol-i],board[crrRow][crrCol-i].type)
                 
                 if((board[crrRow][crrCol-i].type=='rook' || board[crrRow][crrCol-i].type=='queen' ) && board[crrRow][crrCol-i].color!=piece.color){
-                    console.log("rook or queen  ki wajah se2")
+                    if(!forCheckMate){
                     let checkPiece={
                         type:board[crrRow][crrCol-i].type,
                         color:board[crrRow][crrCol-i].color,
@@ -102,23 +129,30 @@ const useSafeLogic = () => {
                         numberOfTurns:board[crrRow][crrCol-i].numberOfTurns+1
                     }
                     let direction = board[crrRow][crrCol-i].color=='white' ? 1: -1;
-                    //console.log("dadad",value[piece.color ?? "white"].row,direction,piece.color)
                     let kingPosition={row:value[piece.color ?? "white"].row,col:value[piece.color ?? "white"].col,color:piece.color}
     
                     let nState={crrRow,crrCol:crrCol-i,piece:checkPiece,direction,board,kingPosition}
                     setGameState(nState);
+                }
                     return false;
                 }
-                if(board[crrRow][crrCol-i].type!=null && board[crrRow][crrCol-i].type!="king"){
-                    iteratorRook[1]=false;
+                if(board[crrRow][crrCol-i].type!=null){
+                    
+                    if(!(prevRow && prevCol && (crrRow == prevRow && crrCol-i ==prevCol))){
+                        
+                        iteratorRook[1]=false;
+                    }
+                    
                 }
                 
             }
         }
         for(let i=1;i<8;i++){
             if(boundaryCheck(crrRow+i,crrCol) && iteratorRook[2]){
+                //
                 if((board[crrRow+i][crrCol].type=='rook' || board[crrRow+i][crrCol].type=='queen') && board[crrRow+i][crrCol].color!=piece.color){
-                    console.log("rook or queen  ki wajah se3")
+                    //
+                    if(!forCheckMate){
                     let checkPiece={
                         type:board[crrRow+i][crrCol].type,
                         color:board[crrRow+i][crrCol].color,
@@ -127,50 +161,56 @@ const useSafeLogic = () => {
                         numberOfTurns:board[crrRow+i][crrCol].numberOfTurns+1
                     }
                     let direction = board[crrRow+i][crrCol].color=='white' ? 1: -1;
-                    //console.log("dadad",value[piece.color ?? "white"].row,direction,piece.color)
                     if(piece.color){
                         let kingPosition={row:value[piece.color].row,col:value[piece.color].col,color:piece.color}
                         let nState={crrRow:crrRow+i,crrCol:crrCol,piece:checkPiece,direction,board,kingPosition}
                         setGameState(nState);
                     }
     
-                    
+                }
                     return false;
                     
                 }
-                if(board[crrRow+i][crrCol].type!=null && board[crrRow+i][crrCol].type!="king"){
-                    iteratorRook[2]=false;
+                if(board[crrRow+i][crrCol].type!=null ){
+                    if(!(prevRow && prevCol && (crrRow+i == prevRow && crrCol == prevCol))){
+                        iteratorRook[2]=false;
+                    }
+                   
                 }
                 
             }
             if(boundaryCheck(crrRow-i,crrCol) && iteratorRook[3]){
+                
                 if((board[crrRow-i][crrCol].type=='rook' || board[crrRow-i][crrCol].type=='queen') && board[crrRow-i][crrCol].color!=piece.color){
-                    console.log("rook or queen ki wajah se4")
+                    if(!forCheckMate){
                     let checkPiece={
                         type:board[crrRow-i][crrCol].type,
                         color:board[crrRow-i][crrCol].color,
                         isDead:false,
                         canMove:true,
-                        numberOfTurns:board[crrRow][crrCol-i].numberOfTurns+1
+                        numberOfTurns:board[crrRow-i][crrCol].numberOfTurns+1
                     }
                     let direction = board[crrRow-i][crrCol].color=='white' ? 1: -1;
-                    //console.log("dadad",value[piece.color ?? "white"].row,direction,piece.color)
                     if(piece.color){
                         let kingPosition={row:value[piece.color].row,col:value[piece.color].col,color:piece.color}
                         let nState={crrRow:crrRow-i,crrCol:crrCol,piece:checkPiece,direction,board,kingPosition}
                         setGameState(nState);
                     }
+                }
                     return false;
                 }
-                if(board[crrRow-i][crrCol].type!=null &&  board[crrRow-i][crrCol].type!="king"){
-                    iteratorRook[3]=false;
+                if(board[crrRow-i][crrCol].type!=null){
+                    if(!(prevRow && prevCol && (crrRow-i == prevRow && crrCol == prevCol))){
+                        iteratorRook[3]=false;
+                    }
+                    
                 }
                
             }
         }
         return true;
     }
-    function isBishopSafe({crrRow,crrCol,board,piece,prevRow,prevCol}:IsPawnSafeParams){
+    function isBishopSafe({crrRow,crrCol,board,piece,prevRow,prevCol,forCheckMate}:IsPawnSafeParams){
         let rBishop = [1,-1,-1,1];
         let cBishop = [1,1,-1,-1];
         let ignore:number[]= [];
@@ -179,10 +219,10 @@ const useSafeLogic = () => {
                 if(!ignore.includes(i)){
                     const colMove = crrCol + cBishop[i] * move;
                     const rowMove = crrRow + rBishop[i] * move;
-                    //console.log("is checking",rowMove,colMove)
+                    
                     if(boundaryCheck(rowMove,colMove)){
                         if((board[rowMove][colMove].type=='bishop' || board[rowMove][colMove].type=='queen' ) && board[rowMove][colMove].color!=piece.color){
-                            //console.log("bishop ki wajah se",rowMove,colMove)
+                            if(!forCheckMate){
                             let checkPiece={
                                 type:board[rowMove][colMove].type,
                                 color:board[rowMove][colMove].color,
@@ -190,12 +230,13 @@ const useSafeLogic = () => {
                                 canMove:true,
                                 numberOfTurns:board[rowMove][colMove].numberOfTurns+1
                             }
+                            
                             let direction = board[rowMove][colMove].color=='white' ? 1: -1;
-                            //console.log("dadad",value[piece.color ?? "white"].row,direction,piece.color)
                             let kingPosition={row:value[piece.color ?? "white"].row,col:value[piece.color ?? "white"].col,color:piece.color}
             
                             let nState={crrRow:rowMove,crrCol:colMove,piece:checkPiece,direction,board,kingPosition}
                             setGameState(nState);
+                        }
                             
                             return false;
                         }
@@ -214,10 +255,9 @@ const useSafeLogic = () => {
                 }
             }
         }
-        //console.log("bishiop ki wajah se lgi hai check")
         return true;
     }
-    function isKingSafe({crrRow,crrCol,board,piece}:IsPawnSafeParams){
+    function isKingSafe({crrRow,crrCol,board,piece,forCheckMate}:IsPawnSafeParams){
         const dRow=[-1,-1,-1,0,1,1,1,0]
         const dCol=[-1,0,1,1,1,0,-1,-1]
         for(let i=0;i<8;i++){
@@ -225,7 +265,6 @@ const useSafeLogic = () => {
             let cRow=crrRow + dRow[i];
             let cCol = crrCol + dCol[i];
             if(boundaryCheck(cRow,cCol)){
-                //console.log("king check",cRow,cCol,board[cRow][cCol].type,board[cRow][cCol].color,piece.color)
                 if((board[cRow][cCol].type=='king' || board[cRow][cCol].type=='queen') && board[cRow][cCol].color!=piece.color){
                     let npiece={
                         color:board[cRow][cCol].color,
@@ -234,7 +273,7 @@ const useSafeLogic = () => {
                         canMove:true,
                         numberOfTurns:board[cRow][cCol].numberOfTurns+1
                     }
-                    if(safeCell({crrRow,crrCol,board,piece:npiece})){
+                    if(safeCell({crrRow,crrCol,board,piece:npiece,forCheckMate})){
                         return false;
                     }
                 }

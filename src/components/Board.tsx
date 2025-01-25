@@ -4,8 +4,11 @@ import BoardUi from './BoardUi'
 import useGameLogic from '../hooks/useGameLogic'
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-import { CheckContext, GameStateContext, KingContext } from '../AppContext/KingContext';
+import {  CheckContext, KingContext, SocketContext, TimerCheck } from '../AppContext/KingContext';
 import useSafeLogic from '../hooks/useSafeLogic';
+import { useLocation } from 'react-router-dom';
+import useSocket from '../hooks/useSocket';
+import axios from 'axios';
 
 
 export type PieceType = {
@@ -19,16 +22,26 @@ export type PieceType = {
 const Board = () => {
     const [prevClickedCell, setClickedCell] = useState<any>('')
     const [turn,setTurn] = useState<any>({white:true,black:false});
-    const[showModal,setShowModal] = useState(false);
+    const [showModal,setShowModal] = useState(false);
     const [won,setWon]=useState('');
-    const [timerW,setTimerW]=useState(2400);
+    const location = useLocation();
+    const stateData = location.state;
+  
+    const {timer} = useContext(TimerCheck);
+   
+    const [timerW,setTimerW]=useState(timer);
     const [timerIdW,setTimerIdW] = useState<number>(0);
-    const [timerB,setTimerB]=useState(2400);
+    const [timerB,setTimerB]=useState(timer);
     const [timerIdB,setTimerIdB] = useState<number>(0);
     const {value,setValue} = useContext(KingContext);
     const {isCheck,setCheck} = useContext(CheckContext);
     const {isPawnSafe,isBishopSafe,isKnightSafe,isRookSafe} = useSafeLogic();
+    const [gameValue,setGameValue] = useState({});
+    const [onGoingGame,setonGoingGame] = useState({});
+    const [userPiece,setUserPiece]= useState('');
+    const [rowValue,setRowValue] = useState(0);
 
+    const socketValue = useContext(SocketContext);
     if(!value.white){
        setValue({
         white: { row: 7, col: 4, color: 'white' },
@@ -37,10 +50,15 @@ const Board = () => {
     }
     const initialState = Array.from({length: 8}, () =>Array(8).fill({
         type:null,
-        color:null
+        color:null,
+        isDead:false,
+        canMove:false,
+        numberOfTurns:0
     }));
     const [board,setBoard] = useState<PieceType [][]>(initialState);
     const {validMove} = useGameLogic(setShowModal,setWon);
+
+    //
    
     const handelMove = (cellRef:React.RefObject<HTMLDivElement>) =>{
         const parent = cellRef.current
@@ -49,13 +67,19 @@ const Board = () => {
             const crrRow = parseInt(currentCellId[0]);
             const crrCol = parseInt(currentCellId[2]);
             const piece = board[crrRow][crrCol];
-            if((piece.color && !turn[piece.color]) && !prevClickedCell){
-                // to get turn one by one, 
-                // if we remove !prevClickedCell, then when a piece will try to capture another piece , it will come into this condition
-                // if one piece takes over other color piece then 'prevClickedCell' will have something
-                // so !prevClickedCell this value will be false;
-                console.log("not your turn")
+            
+            if(piece.color && userPiece.toLowerCase() !== piece.color.toLowerCase() && !prevClickedCell){
+               
+                
             }
+            // else if((piece.color && !turn[piece.color]) && !prevClickedCell){
+            //     // to get turn one by one, 
+            //     // if we remove !prevClickedCell, then when a piece will try to capture another piece , it will come into this condition
+            //     // if one piece takes over other color piece then 'prevClickedCell' will have something
+            //     // so !prevClickedCell this value will be false;
+            //     
+                
+            // }
             else{
                 if(parent?.querySelector('.chessPiece') && !prevClickedCell){
                     // this is when we are trying to make 1st move
@@ -66,72 +90,119 @@ const Board = () => {
                 }
                 else{
                     if(prevClickedCell){
-                        if(parent && validMove(prevClickedCell,board,currentCellId || "",parent)){
-                            console.log("its a move",board,turn.white,timerIdW)
-                            turn.white ? clearInterval(timerIdW) : clearInterval(timerIdB);
-                            setTurn({white:!turn.white,black:!turn.black});
-                            const updatedBoard = [...board];
-                            updatedBoard[crrRow][crrCol] = board[prevClickedCell[0]][prevClickedCell[2]];
-                            updatedBoard[crrRow][crrCol].numberOfTurns+=1;
-                            if(updatedBoard[crrRow][crrCol].type=='king' && updatedBoard[crrRow][crrCol].color=='white'){
-                                
-                                setValue({...value,white:{row:crrRow,col:crrCol,color:updatedBoard[crrRow][crrCol].color as string}})
-                            }
-                            if(updatedBoard[crrRow][crrCol].type=='king' && updatedBoard[crrRow][crrCol].color=='black'){
-                                
-                                setValue({...value,black:{row:crrRow,col:crrCol,color:updatedBoard[crrRow][crrCol].color as string}})
-                            }
-                            if(updatedBoard[crrRow][crrCol].type=='pawn'){
-                                if(crrRow==7){
-                                    updatedBoard[crrRow][crrCol] = {type:'queen',color:"black",isDead:false,canMove:true,numberOfTurns:0};
-                                }
-                                if(crrRow==0){
-                                    updatedBoard[crrRow][crrCol] = {type:'queen',color:"white",isDead:false,canMove:true,numberOfTurns:0};
-                                }
-                              
-                            }
-                            updatedBoard[prevClickedCell[0]][prevClickedCell[2]]={type:null,color:null,isDead:null,canMove:true,numberOfTurns:0};
-
-                            
-                            if(updatedBoard[crrRow][crrCol].color=='black'){
-                                
-                                let param={
-                                    crrRow:value.white.row, 
-                                    crrCol:value.white.col,
-                                    board:updatedBoard,
-                                    piece:{type:'king' as 'king',color:'white' as 'white',isDead:false,canMove:true,numberOfTurns:1}
-                                }
-                                console.log("params123",isCheck)
-                                if(!(isPawnSafe(param) && isBishopSafe(param) && isRookSafe(param) && isKnightSafe(param))){
-                                    alert("check lgi to hai htane se")
-                                    setCheck(true)
-                                }
-                            }
-                            if(updatedBoard[crrRow][crrCol].color=='white'){
-                                
-                                let param={
-                                    crrRow:value.black.row, 
-                                    crrCol:value.black.col,
-                                    board:updatedBoard,
-                                    piece:{type:'king' as 'king',color:'black' as 'black',isDead:false,canMove:true,numberOfTurns:1}
-                                }
-                                console.log("params passes2",param)
-                                if(!(isPawnSafe(param) && isBishopSafe(param) && isRookSafe(param) && isKnightSafe(param))){
-                                    
-                                    setCheck(true)
-                                }
-                            }
                         
-                            
-                            setBoard(updatedBoard);
-                            
+                        if(parent){
+                            let isValidMove = validMove(prevClickedCell,board,currentCellId || "",parent);
+                            if(typeof isValidMove === "object" && "isValid" in isValidMove && isValidMove.isValid){
+                                
+                                turn.white ? clearInterval(timerIdW) : clearInterval(timerIdB);
+                                setTurn({white:!turn.white,black:!turn.black});
+                                
+
+                                const updatedBoard = [...board];
+                                if(isValidMove.isCastle===true){
+                                    let castleDirection;
+                                    if(crrCol==7){
+                                        castleDirection=1;
+                                    }
+                                    else{
+                                        castleDirection=-1;
+                                    }
+                                    
+                                    //kings new position
+                                    updatedBoard[crrRow][Number(prevClickedCell[2])+(2)*castleDirection]= board[prevClickedCell[0]][prevClickedCell[2]];
+                                    //rooks new position
+                                    updatedBoard[crrRow][Number(prevClickedCell[2])+(2)*castleDirection - castleDirection]=updatedBoard[crrRow][crrCol];
+
+                                    updatedBoard[crrRow][prevClickedCell[2]]={type:null,color:null,isDead:null,canMove:true,numberOfTurns:0};
+                                    updatedBoard[crrRow][crrCol]={type:null,color:null,isDead:null,canMove:true,numberOfTurns:0};
+
+                                    updatedBoard[crrRow][Number(prevClickedCell[2])+(2)*castleDirection - castleDirection].numberOfTurns+=1;
+                                    updatedBoard[crrRow][Number(prevClickedCell[2])+2*castleDirection].numberOfTurns+=1;
+
+                                    if(turn.white){
+                                
+                                        setValue({...value,white:{row:crrRow,col:Number(prevClickedCell[2]) + 2*castleDirection,color:'white' as string}})
+                                    }
+                                    if(turn.black){
+                                        
+                                        setValue({...value,black:{row:crrRow,col:Number(prevClickedCell[2]) + (2)*castleDirection,color:'black' as string}})
+                                    }
+                                }
+                                else{
+                                    
+                                updatedBoard[crrRow][crrCol] = board[prevClickedCell[0]][prevClickedCell[2]];
+                                updatedBoard[crrRow][crrCol].numberOfTurns+=1;
+                                
+                                if(updatedBoard[crrRow][crrCol].type=='pawn'){
+                                    if(crrRow==7){
+                                        updatedBoard[crrRow][crrCol] = {type:'queen',color:"black",isDead:false,canMove:true,numberOfTurns:0};
+                                    }
+                                    if(crrRow==0){
+                                        updatedBoard[crrRow][crrCol] = {type:'queen',color:"white",isDead:false,canMove:true,numberOfTurns:0};
+                                    }
+                                
+                                }
+                                updatedBoard[prevClickedCell[0]][prevClickedCell[2]]={type:null,color:null,isDead:null,canMove:true,numberOfTurns:0};
+
+                                if(updatedBoard[crrRow][crrCol].type=='king' && updatedBoard[crrRow][crrCol].color=='white'){
+                                
+                                    setValue({...value,white:{row:crrRow,col:crrCol,color:updatedBoard[crrRow][crrCol].color as string}})
+                                }
+                                if(updatedBoard[crrRow][crrCol].type=='king' && updatedBoard[crrRow][crrCol].color=='black'){
+                                    
+                                    setValue({...value,black:{row:crrRow,col:crrCol,color:updatedBoard[crrRow][crrCol].color as string}})
+                                }
+                                
+                                // to check if the because of this piece, the opponent king is getting check
+                                if(updatedBoard[crrRow][crrCol].color=='black'){
+                                    
+                                    let param={
+                                        crrRow:value.white.row, 
+                                        crrCol:value.white.col,
+                                        board:updatedBoard,
+                                        piece:{type:'king' as 'king',color:'white' as 'white',isDead:false,canMove:true,numberOfTurns:1},
+                                        forCheckMate:false
+
+                                    }
+                                    
+                                    if(!(isPawnSafe(param) && isBishopSafe(param) && isRookSafe(param) && isKnightSafe(param))){
+                                       // alert("check lgi to hai htane se")
+                                       
+                                        setCheck(true)
+                                    }
+                                }
+                                if(updatedBoard[crrRow][crrCol].color=='white'){
+                                    
+                                    let param={
+                                        crrRow:value.black.row, 
+                                        crrCol:value.black.col,
+                                        board:updatedBoard,
+                                        piece:{type:'king' as 'king',color:'black' as 'black',isDead:false,canMove:true,numberOfTurns:1},
+                                        forCheckMate:false
+                                    }
+                                    if(!(isPawnSafe(param) && isBishopSafe(param) && isRookSafe(param) && isKnightSafe(param))){
+                                        
+                                        setCheck(true)
+                                    }
+                                }
+                                
+                                }
+                                
+                                if(socketValue){
+                                    
+                                    socketValue?.socket?.emit("makeMove",JSON.stringify({...gameValue,player1Turn:!gameValue.player1Turn,board:updatedBoard}))
+                                }
+                                setBoard(updatedBoard);
+                                
                         }
                         else{
-                            console.log("invalid move")
+                            
                         }
                     }
+                    }
                     else{
-                        console.log("not a move")
+                        
                     }
                     setClickedCell('');
                 }
@@ -143,8 +214,8 @@ const Board = () => {
     const handelReset = () =>{
         setTurn({white:true,black:false});
         setWon('')
-        setTimerW(120);
-        setTimerB(120);
+        setTimerW(timer);
+        setTimerB(timer);
         initializeBoard();   
     }
 
@@ -197,10 +268,61 @@ const Board = () => {
             
         })
         setBoard(updatedBoard);
+        
+    }
+    const handleSocket = () =>{
+       
+      
+        
+        if(socketValue?.socket){
+            socketValue?.socket?.on("gameState",(event)=>{
+                
+                const res=JSON.parse(event)
+                setGameValue(res);
+              //  
+                setTimerW(res.player1Time);
+                setTimerB(res.player2Time);
+                if(res.board.length>0){
+                    setBoard(res.board);
+                    //
+                }
+            })
+            
+            
+        }
+    }
+    useEffect(()=>{
+        handleSocket();
+    },[socketValue])
+    // useEffect(()=>{
+    //     if(board[0][0].type!=null) socketValue?.socket?.emit("boardUpdate",board);
+    // },[board])
+    function currentGame(){
+        axios.get("http://localhost:8000/api/currentGame",{withCredentials:true})
+        .then((res)=>{
+            
+            setonGoingGame(res.data);
+            const loggedInUser = JSON.parse(sessionStorage.getItem('user') as string)
+           
+                if(res.data.player1.player_id===loggedInUser._id){
+                    setRowValue(0);
+                    setUserPiece(res.data.player1.pieceType)
+                }
+                else if(res.data.player2.player_id===loggedInUser._id){
+                    setRowValue(8)
+                    setUserPiece(res.data.player2.pieceType)
+                }
+        })
+        .catch(err=> console.log(err));
     }
     useEffect(()=>{
         initializeBoard();
+       
+        currentGame();
+
+        
     },[])
+    
     useEffect(()=>{
         if(timerW==0){
             setWon('Black')
@@ -233,7 +355,7 @@ const Board = () => {
     </Modal.Header>
     <Modal.Body>{won} won</Modal.Body>
     </Modal>
-     <BoardUi board={board} handelMove={handelMove} clickedCell={prevClickedCell} handelReset={handelReset} setTimerW={setTimerW} timerW={timerW} setTimerIdW={setTimerIdW} setTimerB={setTimerB} timerB={timerB} setTimerIdB={setTimerIdB} turn={turn}/>
+     <BoardUi board={board} handelMove={handelMove} clickedCell={prevClickedCell} handelReset={handelReset} setTimerW={setTimerW} timerW={timerW} setTimerIdW={setTimerIdW} setTimerB={setTimerB} timerB={timerB} setTimerIdB={setTimerIdB} turn={turn} rowValue={rowValue}/>
      </>
   
   )

@@ -2,7 +2,9 @@
   display :flex;
   border: 10px solid black;
   background-color: white;
-  padding:10px
+  padding:10px;
+  width: 64%;
+  margin:auto
 }
 .wrapper{
     display: grid;
@@ -40,4 +42,194 @@
     font-weight: 600 !important;
     font-size: 40px !important;
     color:red;
+  }
+  .loginPage{
+    background-color: #cddc95; 
+  }
+
+  .mainContainer{
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .mainRow{
+    height: 100%;
+    width: 100%;
+  }
+  .imageContainer{
+    width: 100%;
+    height: 100%;
+  }
+  .backgroundImage{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .homePage{
+    /* background-image: url('/chessB3.jpeg');
+    background-size: cover;
+    background-repeat: no-repeat; */
+    height: 100vh;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: grey !important;
+    padding-top: 5%;
+  }
+  .innerContainer{
+    box-shadow: -6px 8px 14px 2px black;
+    width: 100%;
+    background-color: white;
+    border-radius: 5px;
+  }
+  .button{
+    background-color: white;
+    color:black;
+    border-color: white;
+  }
+  .inputBox{
+    border-bottom: 1px solid black;
+    background-color: white;
+    overflow: hidden;
+    padding:6px
+  }
+  .suggestionBox{
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 18px;
+    margin:5px 0px;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  .leftSide{
+    margin-left: 10px;
+  }
+
+  .friendsList{
+    background-color: white;
+    margin:50px 0px;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: -6px 8px 14px 2px black;
+  }
+  .rightSide{
+    width: 100%;
+  }
+  .icons{
+    cursor: pointer;
+    &:hover{
+      background-color: #d5cece;
+      border-radius: 18px;
+    }
+  }
+  .playButton{
+    background-color: #72af6c;
+    border:none;
+    font-size: 16px;
+    font-weight: 600;
+    &:hover{
+      background-color: #497245;
+    }
+  }
+  .friendRequest{
+    background-color: white;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: -6px 8px 14px 2px black;
+  }
+  .statistics{
+    background-color: white;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    border:1px solid black;
+    border-radius: 15px;
+    margin: 20px;
+  }
+  .challengeButton{
+    background-color: #72af6c;
+    color:white;
+    border:none;
+    float:right;
+    position: relative;
+    &:hover{
+      background-color: #497245;
+    };
+    
+  }
+  .plusIcon{
+    position: absolute;
+    left:10px;
+    top:5px
+  }
+  .ratingContainer{
+    border:1px solid black;
+    border-radius: 18px;
+    background-color: #c5c3c3;
+    margin-right: 10px;
+  }
+  .badge{
+    position: absolute;
+    top:-5px;
+    left:22px;
+    font-size: 11px;
+    border-radius: 13px;
+  }
+  .timerButton{
+    background-color: white;
+    color:#72af6c;
+    border-color: #72af6c;
+    margin-right: 10px;
+    &:hover{
+      background-color: #72af6c !important;
+      color:white !important;
+    }
+  }
+  .selectedButton{
+    background-color: #72af6c !important;
+    color:white !important;
+  }
+  .notificationPanel{
+    border:1px solid black;
+    border-radius: 18px;
+    z-index: 1000;
+    background-color: white;
+    color: black;
+    position: fixed;
+    top:112px;
+    right:72px;
+    width: 20%;
+    padding-top:1%
+  }
+  .overLay{
+    position: relative;
+    pointer-events: none;
+  }
+  .overLay::before{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: grey;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .loader{
+    position: fixed;
+    top:50%;
+    left:42%;
+    background-color: white;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 18px;
+    padding-top: 20px;
+    width: 20%;
+    height: 27%;
   }
