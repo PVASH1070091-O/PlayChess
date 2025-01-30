@@ -7,8 +7,8 @@ const Statistics = () => {
         <Row style={{textAlign:'left'}}>
             <h4>Statistics</h4>
         </Row>
-        <Row>
-            <Col className='ratingContainer'>
+        <Row className="justify-content-between">
+            <Col xs={4} className='ratingContainer'>
             
                 <Row>
                     <p>Blitz</p>
@@ -19,7 +19,7 @@ const Statistics = () => {
                 </Row>
             
             </Col>
-            <Col className='ratingContainer'>
+            <Col  xs={4}  className='ratingContainer'>
                 <Row>
                     <p>Rapid</p>
                 </Row>
@@ -28,7 +28,7 @@ const Statistics = () => {
                     <span>L: 100</span>
                 </Row>
             </Col>
-            <Col className='ratingContainer'>
+            <Col  xs={4} className='ratingContainer'>
                 <Row>
                     <p>Classic</p>
                 </Row>

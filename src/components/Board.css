@@ -150,6 +150,7 @@
     border:1px solid black;
     border-radius: 15px;
     margin: 20px;
+    justify-content: center;
   }
   .challengeButton{
     background-color: #72af6c;
@@ -171,7 +172,7 @@
     border:1px solid black;
     border-radius: 18px;
     background-color: #c5c3c3;
-    margin-right: 10px;
+   
   }
   .badge{
     position: absolute;
@@ -224,12 +225,16 @@
   .loader{
     position: fixed;
     top:50%;
-    left:42%;
+    left:50%;
     background-color: white;
     align-items: center;
     border: 1px solid black;
     border-radius: 18px;
     padding-top: 20px;
     width: 20%;
-    height: 27%;
+    height: 150px;
+    transform: translate(-50%, -50%);
+  }
+  .spinner{
+    margin-left: 40%;
   }

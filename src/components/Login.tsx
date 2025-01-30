@@ -1,10 +1,15 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button, Col, Container, Row } from 'react-bootstrap'
 
 const Login = () => {
     function handleGoogleSignin(){
-        window.open("http://localhost:8000/auth/google", "_self");
+        window.open(import.meta.env.VITE_API_KEY+ "auth/google", "_self");
     }
+    useEffect(()=>{
+        if(sessionStorage.getItem('user')){
+            sessionStorage.removeItem('user')
+        }
+    },[])
   return (
     <Container fluid className='mainContainer'>
         <Row className='mainRow'>

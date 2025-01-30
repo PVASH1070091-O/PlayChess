@@ -6,7 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import {  CheckContext, KingContext, SocketContext, TimerCheck } from '../AppContext/KingContext';
 import useSafeLogic from '../hooks/useSafeLogic';
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import useSocket from '../hooks/useSocket';
 import axios from 'axios';
 
@@ -40,6 +40,11 @@ const Board = () => {
     const [onGoingGame,setonGoingGame] = useState({});
     const [userPiece,setUserPiece]= useState('');
     const [rowValue,setRowValue] = useState(0);
+    const [player1,setPlayer1] = useState(false);
+    const [player2,setPlayer2] = useState(false);
+    const [exitGame,setExistGame] = useState(false);
+
+    const navigate = useNavigate();
 
     const socketValue = useContext(SocketContext);
     if(!value.white){
@@ -69,8 +74,10 @@ const Board = () => {
             const piece = board[crrRow][crrCol];
             
             if(piece.color && userPiece.toLowerCase() !== piece.color.toLowerCase() && !prevClickedCell){
-               
-                
+               console.log("not your piece") 
+            }
+            else if((player1 && !gameValue.player1Turn) || (player2 && gameValue.player1Turn) ){
+                console.log("not your turn")
             }
             // else if((piece.color && !turn[piece.color]) && !prevClickedCell){
             //     // to get turn one by one, 
@@ -134,6 +141,7 @@ const Board = () => {
                                 updatedBoard[crrRow][crrCol] = board[prevClickedCell[0]][prevClickedCell[2]];
                                 updatedBoard[crrRow][crrCol].numberOfTurns+=1;
                                 
+                                console.log("new board",updatedBoard)
                                 if(updatedBoard[crrRow][crrCol].type=='pawn'){
                                     if(crrRow==7){
                                         updatedBoard[crrRow][crrCol] = {type:'queen',color:"black",isDead:false,canMove:true,numberOfTurns:0};
@@ -188,12 +196,16 @@ const Board = () => {
                                 }
                                 
                                 }
-                                
+                                console.log("players value",player1,player2)
                                 if(socketValue){
+                                    console.log("gameValue",gameValue,updatedBoard,crrRow,crrCol,prevClickedCell)
                                     
                                     socketValue?.socket?.emit("makeMove",JSON.stringify({...gameValue,player1Turn:!gameValue.player1Turn,board:updatedBoard}))
+                                    console.log("Emitting makeMove for Black's move", { ...gameValue, player1Turn: !gameValue.player1Turn, board: updatedBoard });
+                                    
+                                    
                                 }
-                                setBoard(updatedBoard);
+                               // setBoard(updatedBoard);
                                 
                         }
                         else{
@@ -214,8 +226,8 @@ const Board = () => {
     const handelReset = () =>{
         setTurn({white:true,black:false});
         setWon('')
-        setTimerW(timer);
-        setTimerB(timer);
+        setTimerW(timerW);
+        setTimerB(timerB);
         initializeBoard();   
     }
 
@@ -273,11 +285,12 @@ const Board = () => {
     const handleSocket = () =>{
        
       
-        
+        console.log("handleSocket is called")
         if(socketValue?.socket){
             socketValue?.socket?.on("gameState",(event)=>{
                 
                 const res=JSON.parse(event)
+                //console.log("resss",res)
                 setGameValue(res);
               //  
                 setTimerW(res.player1Time);
@@ -287,16 +300,38 @@ const Board = () => {
                     //
                 }
             })
-            
-            
+            socketValue?.socket.on('opponentLeft',(event)=>{
+                console.log("evtnt data",event)
+                setShowModal(true);
+                setWon(event)
+            })
+            socketValue?.socket.on("gameFinished",(event)=>{
+                console.log("evenof who won checkmate",event);
+                setShowModal(true);
+                setWon(JSON.parse(event).piece);
+            })
         }
     }
     useEffect(()=>{
         handleSocket();
     },[socketValue])
-    // useEffect(()=>{
-    //     if(board[0][0].type!=null) socketValue?.socket?.emit("boardUpdate",board);
-    // },[board])
+    useEffect(()=>{
+        console.log('who won',won)
+        if(won === 'white'){
+            if(socketValue?.socket){
+                console.log('white won',won)
+                socketValue?.socket.emit("gameWon",JSON.stringify({piece:"White"}));
+                
+            }
+        }
+        if(won === 'Black'){
+            if(socketValue?.socket){
+                console.log('black won',won)
+                socketValue?.socket.emit("gameWon",JSON.stringify({piece:"Black"}));
+            }
+        }
+    },[won])
+    
     function currentGame(){
         axios.get("http://localhost:8000/api/currentGame",{withCredentials:true})
         .then((res)=>{
@@ -306,10 +341,12 @@ const Board = () => {
            
                 if(res.data.player1.player_id===loggedInUser._id){
                     setRowValue(0);
+                    setPlayer1(true);
                     setUserPiece(res.data.player1.pieceType)
                 }
                 else if(res.data.player2.player_id===loggedInUser._id){
                     setRowValue(8)
+                    setPlayer2(true);
                     setUserPiece(res.data.player2.pieceType)
                 }
         })
@@ -319,36 +356,66 @@ const Board = () => {
         initializeBoard();
        
         currentGame();
+        window.history.pushState(null,'null',window.location.href);
 
+        const handlePopState = () =>{
+            setExistGame(true);
+        }
+        window.addEventListener('popstate',handlePopState)
+        return () =>{
+            window.removeEventListener('popstate',handlePopState);
+        }
         
     },[])
+
+    function yesExit(){
+        setExistGame(false);
+        setShowModal(true);
+        if(userPiece.toLowerCase() === 'white'){
+            
+            setWon('Black');
+            socketValue?.socket?.emit('playerDisconnect','white');
+        }
+        if(userPiece.toLowerCase() === 'black'){
+            setWon('White');
+            socketValue?.socket?.emit('playerDisconnect','black');
+        }
+        
+        navigate("/");
+    }
+    function noStay(){
+        
+        setExistGame(false);
+    }
     
     useEffect(()=>{
         if(timerW==0){
             setWon('Black')
             setShowModal(true);
-            clearInterval(timerIdW);
-            clearInterval(timerIdB);
+           
         }
         if(timerB==0){
             setWon('White')
             setShowModal(true);
-            clearInterval(timerIdB);
-            clearInterval(timerIdW);
+           
         }
     },[timerW,timerB])
     function handleClose(){
         setShowModal(false);
-        handelReset();
-        clearInterval(timerIdB);
-        clearInterval(timerIdW);
-        setTimerB(120);
-        setTimerW(120)
+        navigate("/");
     }
    
   return (
     <>
     
+    <Modal show={exitGame} onHide={noStay} centered>
+    <Modal.Header closeButton>
+      <Modal.Title className='justify-content-center'>Do you want to exit the game?</Modal.Title>
+    </Modal.Header>
+    <Modal.Body><Button onClick={yesExit}>Yes</Button><Button onClick={noStay}>No</Button></Modal.Body>
+    </Modal>
+    
+
     <Modal show={showModal} onHide={handleClose} centered>
     <Modal.Header closeButton>
       <Modal.Title className='justify-content-center'>{(timerB==0 || timerW==0) ? 'Times Up': 'Checkmate'}</Modal.Title>

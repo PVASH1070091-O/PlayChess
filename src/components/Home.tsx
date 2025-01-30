@@ -66,7 +66,7 @@ const Home = () => {
 
     function challengeRequests(){
         
-        axios.get("http://localhost:8000/api/challengeRequests",{withCredentials:true})
+        axios.get(import.meta.env.VITE_API_KEY+ "api/challengeRequests",{withCredentials:true})
         .then((res)=>{
             
             setNotification(res.data.reverse());
@@ -74,7 +74,7 @@ const Home = () => {
     }
     const updateChallenge = (status:string,item:any) =>{
         
-        axios.patch("http://localhost:8000/api/updateChallenge/" + item._id,{status:status,sender_id:item.player1._id},{withCredentials:true})
+        axios.patch(import.meta.env.VITE_API_KEY+ "api/updateChallenge/" + item._id,{status:status,sender_id:item.player1._id},{withCredentials:true})
         .then((res)=>{
             
             setPanel(false);
@@ -91,7 +91,7 @@ const Home = () => {
     }
     
     function showRequests(userLoggedIn:any){
-        axios.get("http://localhost:8000/api/showRequests?id=" + userLoggedIn._id , {withCredentials:true})
+        axios.get(import.meta.env.VITE_API_KEY+ "api/showRequests?id=" + userLoggedIn._id , {withCredentials:true})
         .then((res)=>{
             setRequestList(res.data);
             
@@ -101,13 +101,17 @@ const Home = () => {
         })
     }
     function showFriends(userLoggedIn:any){
-        axios.get("http://localhost:8000/api/getFriends?id=" + userLoggedIn._id , {withCredentials:true})
+        axios.get(import.meta.env.VITE_API_KEY+ "api/getFriends?id=" + userLoggedIn._id , {withCredentials:true})
             .then((res)=>{
                 setFriendsList(res.data);
                 
             })
             .catch((err)=>{
-                
+                if(err?.response?.data?.status === 'Logged Out'){
+                    navigate("/login");
+                    sessionStorage.removeItem('user');
+                    console.log("errr in friendlist fetching",err.response.data.status)
+                }
             })
     }
     
@@ -115,13 +119,13 @@ const Home = () => {
         
         
         if(searchValue.length>0){
-        axios.post('http://localhost:8000/api/searchFriend',{searched:searchValue.toLowerCase()}, {withCredentials:true})
+        axios.post(import.meta.env.VITE_API_KEY+ 'api/searchFriend',{searched:searchValue.toLowerCase()}, {withCredentials:true})
         .then((res)=>{
             setSearchList(res.data)
             setIsSearched(true);
             
         })
-        .catch((err)=> 
+        .catch((err)=> console.log(err)
         )
         }
         else{
@@ -142,7 +146,7 @@ const Home = () => {
         }
     }
     const sendRequest = useCallback(() =>{
-        axios.post("http://localhost:8000/api/sendRequest",{sendTo:searchValue.toLowerCase()},{withCredentials:true})
+        axios.post(import.meta.env.VITE_API_KEY+ "api/sendRequest",{sendTo:searchValue.toLowerCase()},{withCredentials:true})
         .then((res)=>{
             
         })
@@ -152,7 +156,7 @@ const Home = () => {
     },[])
     const handleRequest = useCallback((status:string,id:any) =>{
         
-        axios.patch("http://localhost:8000/api/updateRequest?reqid=" + id,{status:status})
+        axios.patch(import.meta.env.VITE_API_KEY+ "api/updateRequest?reqid=" + id,{status:status})
         .then((res)=>{
             
             
@@ -161,7 +165,7 @@ const Home = () => {
             setRequestList(newList);
             showFriends(JSON.parse(sessionStorage.getItem('user') as string));
         })
-        .catch((err)=>)
+        .catch((err)=>console.log(err))
     },[])
     
 
@@ -170,6 +174,19 @@ const Home = () => {
      <Modal show={showModal} onHide={()=>setShowModal(false)} centered backdrop="static"
         keyboard={false} >
     <Modal.Body style={{margin:'auto'}}>Challenge Has Expired !</Modal.Body>
+    
+    </Modal>
+    <Modal size="sm" show={loader} onHide={()=>showLoader(false)} centered backdrop="static"
+        keyboard={false} >
+    <Modal.Body style={{margin:'auto'}}>
+        <h6>Waiting for opponent</h6>
+        <div className='spinner'>
+            <Spinner animation="border" role="status">
+                
+                <span className="visually-hidden">Loading...</span>
+            </Spinner>
+        </div>
+    </Modal.Body>
     
     </Modal>
     <Container className={`homePage ${loader ? 'overLay':""}`}>
@@ -288,14 +305,14 @@ const Home = () => {
             
         </Container>}
     
-        {loader && 
+        {/* {loader && 
         <div className='loader'>
             <h6>Waiting for opponent</h6>
             <Spinner animation="border" role="status">
             
             <span className="visually-hidden">Loading...</span>
             </Spinner>
-        </div>}
+        </div>} */}
    </Container>
    </>
   )

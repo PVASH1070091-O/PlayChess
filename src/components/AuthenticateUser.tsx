@@ -13,9 +13,10 @@ const AuthenticateUser = () => {
     const socketValue = useContext(SocketContext);
 
     useEffect(() => {
-      axios.get('http://localhost:8000/api/verifyUser',{ withCredentials: true })
+      if(Object.keys(user).length === 0){
+      axios.get(import.meta.env.VITE_API_KEY+'api/verifyUser',{ withCredentials: true })
       .then((res)=>{
-        
+        console.log(res,"ress")
         setUser(res.data);
         if(res.data.userName.length==0){
 
@@ -26,7 +27,10 @@ const AuthenticateUser = () => {
             navigate('/')
         }
       })
-    
+      }
+      else{
+        console.log("alredy user")
+      }
       
     }, [])
 
@@ -40,7 +44,7 @@ const AuthenticateUser = () => {
             setShowModal(false);
 
         })
-        .catch((err)=> )
+        .catch((err)=> console.log(err))
     }
      
     
@@ -65,3 +69,6 @@ const AuthenticateUser = () => {
 }
 
 export default AuthenticateUser
+
+
+
