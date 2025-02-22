@@ -36,7 +36,7 @@ const AuthenticateUser = () => {
 
     const saveUserName = () =>{
         
-        axios.patch("http://localhost:8000/api/setUserName",{"userName":userName},{ withCredentials: true })
+        axios.patch(import.meta.env.VITE_API_KEY+"api/setUserName",{"userName":userName},{ withCredentials: true })
         .then((res)=>{
             
             sessionStorage.setItem("user",JSON.stringify(res.data));

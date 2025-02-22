@@ -197,16 +197,10 @@ const Board = () => {
                                 
                                 }
                                 console.log("players value",player1,player2)
-                                if(socketValue){
-                                    console.log("gameValue",gameValue,updatedBoard,crrRow,crrCol,prevClickedCell)
-                                    
-                                    socketValue?.socket?.emit("makeMove",JSON.stringify({...gameValue,player1Turn:!gameValue.player1Turn,board:updatedBoard}))
-                                    console.log("Emitting makeMove for Black's move", { ...gameValue, player1Turn: !gameValue.player1Turn, board: updatedBoard });
-                                    
-                                    
+                                if(socketValue){                                    
+                                    socketValue?.socket?.emit("makeMove",JSON.stringify({...gameValue,player1Turn:!gameValue.player1Turn,board:updatedBoard}))                                    
                                 }
-                               // setBoard(updatedBoard);
-                                
+                             
                         }
                         else{
                             

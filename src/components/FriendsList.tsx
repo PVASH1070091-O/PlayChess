@@ -28,8 +28,6 @@ const FriendsList = (props:any) => {
     
     const sendChallenge = () =>{
         setSentChallenge(false);
-        
-        //as string),selectedFriend._id);
         const loggedInUser= JSON.parse(sessionStorage.getItem('user') as string);
         axios.post("http://localhost:8000/api/requestChallenge",{player1:loggedInUser._id,player2:selectedFriend._id,status:'pending',gameTime:timer},{withCredentials:true})
         .then((res)=>{
@@ -60,11 +58,11 @@ const FriendsList = (props:any) => {
                 const res=JSON.parse(event)
              
             //  setTimer(res.time);
-                if(res.status==='accepted' || res.status==='rejected'){
+                if(res.status==='rejected'){
                     props.showLoader(false);
                 }
                 if(res.status==='accepted'){
-                    //socket.onmessage=null;
+                    props.showLoader(false);
                     navigate("/playGame",{state:{color:'white'}})
                 }
             })
