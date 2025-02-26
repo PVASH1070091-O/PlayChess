@@ -30,6 +30,8 @@ const Home = () => {
     const[showModal,setShowModal] = useState(false);
     //const {socketConnection} = useSocket();
     const socketValue = useContext(SocketContext);
+    console.log("socket value a t home",socketValue)
+    const {socketConnection} = useSocket();
 
     const navigate = useNavigate();
 
@@ -48,11 +50,21 @@ const Home = () => {
             showFriends(userLoggedIn);
             showRequests(userLoggedIn);
             challengeRequests();
+            const newSocket = socketConnection(userLoggedIn);
+            socketValue.setSocket(newSocket);
         }
         else{
             navigate('/login')
         }
+        return () =>{
+            if(socketValue.socket){
+                socketValue.socket.disconnect();
+            }
+        }
     },[])
+    useEffect(()=>{
+        console.log("socket value at home in effect",socketValue.socket)
+    },[socketValue.socket])
     
     useEffect(() => {
         if(showModal){
@@ -68,7 +80,7 @@ const Home = () => {
         
         axios.get(import.meta.env.VITE_API_KEY+ "api/challengeRequests",{withCredentials:true})
         .then((res)=>{
-            
+            console.log("notificationss",res)
             setNotification(res.data.reverse());
         })
     }
@@ -78,6 +90,7 @@ const Home = () => {
         .then((res)=>{
             
             setPanel(false);
+            console.log("time value",res.data)
             setTimer(res.data.gameTime.time);
             challengeRequests();
             navigate("/playGame",{state:{color:"black"}})
@@ -145,18 +158,10 @@ const Home = () => {
             setIsSearched(false);
         }
     }
-    const sendRequest = useCallback(() =>{
-        axios.post(import.meta.env.VITE_API_KEY+ "api/sendRequest",{sendTo:searchValue.toLowerCase()},{withCredentials:true})
-        .then((res)=>{
-            
-        })
-        .catch((err)=>{
-            
-        })
-    },[])
+    
     const handleRequest = useCallback((status:string,id:any) =>{
         
-        axios.patch(import.meta.env.VITE_API_KEY+ "api/updateRequest?reqid=" + id,{status:status})
+        axios.patch(import.meta.env.VITE_API_KEY+ "api/updateRequest?reqid=" + id,{status:status},{withCredentials:true})
         .then((res)=>{
             
             
@@ -215,7 +220,7 @@ const Home = () => {
                 </div>
                 {searchList.length> 0 ? (<div className='suggestionBox'>
                     {searchList.map((item:any)=>(
-                        <SuggestionList friend={item} sendRequest={sendRequest} friendsList={friendsList}/>
+                        <SuggestionList friend={item} friendsList={friendsList}/>
                     )) 
                     
                 }
@@ -246,7 +251,7 @@ const Home = () => {
                             <img src='/board.png' />
                             </Row>
                             <Row style={{margin:'auto',marginTop:'10px'}}>
-                            <Button className='playButton'>Play Random</Button>
+                            <Button className='playButton' onClick={()=> navigate('/playRandom')}>Play Random</Button>
                         </Row>
                     </Col>
                     <Col>

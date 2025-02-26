@@ -13,6 +13,7 @@ import {
 import Login from './components/Login';
 import AuthenticateUser from './components/AuthenticateUser';
 import SocketProvider from './components/SocketProvider';
+import PlayRandom from './components/PlayRandom';
 
 function App() {
   const [value, setValue] = useState({white: { row: 7, col: 4, color: 'white' },
@@ -41,6 +42,7 @@ function App() {
                   <Route path='/login' element={<Login />}/>
                   <Route path='/authenticateUser' element={<AuthenticateUser />}/>
                   <Route path='/playGame' element={<Board />}/>
+                  <Route path='/playRandom' element={<PlayRandom />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               </SocketProvider>

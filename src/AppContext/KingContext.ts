@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import { PieceType } from "../components/Board";
-
+import { Socket } from "socket.io-client"; 
 
 interface Piece {
     row: number;
@@ -40,9 +40,8 @@ interface TimerType{
     setTimer:React.Dispatch<React.SetStateAction<number>>
 }
 interface SocketType{
-    socket: WebSocket | null,
-    socketConnection: (loggedInUser:any) => WebSocket,
-    setSocket:React.Dispatch<React.SetStateAction<WebSocket | null>>
+    socket: Socket | null,
+    setSocket:React.Dispatch<React.SetStateAction<Socket | null>>
 }
 
 
@@ -76,4 +75,7 @@ export const TimerCheck = createContext<TimerType>({
     setTimer: () => {}
 });
 
-export const SocketContext = createContext<SocketType | undefined>(undefined)
+export const SocketContext = createContext<SocketType>({
+    socket:null,
+    setSocket: () =>{}
+})

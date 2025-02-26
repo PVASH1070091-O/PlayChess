@@ -49,10 +49,10 @@ const FriendsList = (props:any) => {
     const handleWebSocket = (loggedInUser:any,selectedFriendId:string) =>{
         
         
-        
+        console.log("sooockk",socketValue)
         if(socketValue?.socket){
             
-            socketValue.socket.emit("ChallengeSent",selectedFriendId)
+            //socketValue.socket.emit("ChallengeSent",selectedFriendId)
 
             socketValue.socket.on("ChallengeStatus",(event)=>{
                 const res=JSON.parse(event)

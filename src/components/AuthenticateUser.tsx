@@ -4,6 +4,7 @@ import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import { useNavigate } from 'react-router-dom';
 import { SocketContext } from '../AppContext/KingContext';
+import useSocket from '../hooks/useSocket';
 
 const AuthenticateUser = () => {
     const [showModal,setShowModal] = useState(false);
@@ -11,6 +12,8 @@ const AuthenticateUser = () => {
     const [user,setUser] = useState({})
     const navigate = useNavigate();
     const socketValue = useContext(SocketContext);
+    console.log("socket valuee",socketValue)
+    const {socketConnection} = useSocket();
 
     useEffect(() => {
       if(Object.keys(user).length === 0){
@@ -24,6 +27,9 @@ const AuthenticateUser = () => {
         }
         else{
             sessionStorage.setItem("user",JSON.stringify(res.data));
+            let loggedInUser = JSON.parse(sessionStorage.getItem('user') as string)
+            const newSocket = socketConnection(loggedInUser);
+            socketValue.setSocket(newSocket);
             navigate('/')
         }
       })

@@ -7,7 +7,6 @@ import Button from 'react-bootstrap/Button';
 import {  CheckContext, KingContext, SocketContext, TimerCheck } from '../AppContext/KingContext';
 import useSafeLogic from '../hooks/useSafeLogic';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import useSocket from '../hooks/useSocket';
 import axios from 'axios';
 
 
@@ -279,12 +278,12 @@ const Board = () => {
     const handleSocket = () =>{
        
       
-        console.log("handleSocket is called")
+        console.log("handleSocket is called",socketValue)
         if(socketValue?.socket){
             socketValue?.socket?.on("gameState",(event)=>{
                 
                 const res=JSON.parse(event)
-                //console.log("resss",res)
+                console.log("resss",res)
                 setGameValue(res);
               //  
                 setTimerW(res.player1Time);

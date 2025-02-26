@@ -1,35 +1,15 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { SocketContext } from '../AppContext/KingContext'
 import useSocket from '../hooks/useSocket'
+import { Socket } from "socket.io-client"; 
 
 
 const SocketProvider = ({children}) => {
 
-    const {socket,socketConnection,setSocket} = useSocket();
-   // const socketValue = useContext(SocketContext);
-   const [socketData,setData] = useState(null)
-
-    
-    useEffect(()=>{
-        if(sessionStorage.getItem('user')) {
-            
-            let res = JSON.parse(sessionStorage.getItem('user') as string)
-            const newSocket = socketConnection(res);
-            setSocket(newSocket);
-            
-            setData({
-                socket:newSocket,
-                socketConnection,
-                setSocket
-            })
-            
-        }
-        
-        
-    },[])
+    const [socket,setSocket] = useState<Socket | null>(null);
     
   return (
-        <SocketContext.Provider value={socketData}>
+        <SocketContext.Provider value={{socket,setSocket}}>
             {children}
         </SocketContext.Provider>
     )
